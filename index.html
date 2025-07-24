@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost Pets Bulletin Board</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9f2d3 url('https://www.transparenttextures.com/patterns/cardboard.png');
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #fceec7;
+            border-right: 4px solid #c49e62;
+            padding: 20px;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar h2 {
+            font-size: 1.5em;
+            color: #8b4513;
+            margin-bottom: 20px;
+        }
+        .sidebar button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 1em;
+            background-color: #fff8dc;
+            border: 2px solid #deb887;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .board {
+            flex-grow: 1;
+            max-width: 1200px;
+            margin: 50px auto;
+            background-color: #fff7e6;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            border: 12px solid #c49e62;
+            border-radius: 10px;
+            background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #5a370b;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px #ffffff;
+        }
+        .post {
+            background-color: #fffdf7;
+            border: 4px double #a0522d;
+            padding: 20px;
+            margin: 25px;
+            border-radius: 8px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+            transform: rotate(-1deg);
+            width: 300px;
+            float: left;
+            position: relative;
+        }
+        .post:nth-child(even) {
+            transform: rotate(1.5deg);
+            background-color: #fdf5e6;
+        }
+        .post h2 {
+            margin: 0 0 10px;
+            color: #b22222;
+            font-size: 1.8em;
+        }
+        .post p {
+            margin: 8px 0;
+            font-size: 1.1em;
+        }
+        .footer {
+            clear: both;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 40px;
+        }
+        .thumbtack {
+            width: 30px;
+            height: 30px;
+            background: red;
+            border-radius: 50%;
+            position: absolute;
+            top: -15px;
+            left: calc(50% - 15px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 2px solid #900;
+            z-index: 2;
+        }
+        .post-container {
+            position: relative;
+            display: inline-block;
+        }
+        .report-btn {
+            display: block;
+            margin: 0 auto 30px auto;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            background-color: #ffcc00;
+            border: 3px solid #cc9900;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        .report-btn:hover {
+            background-color: #ffdb4d;
+        }
+        .remove-btn {
+            margin-top: 10px;
+            padding: 6px 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form {
+            display: none;
+            margin: 0 auto;
+            max-width: 500px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #cc9900;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        form input, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        form button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        const posts = [];
+        const users = {};
+        let currentUser = null;
+
+        function loginUser() {
+            const username = prompt("Enter your username:");
+            if (username) {
+                if (!users[username]) users[username] = [];
+                currentUser = username;
+                alert("Logged in as " + username);
+            }
+        }
+
+        function showForm() {
+            if (!currentUser) {
+                alert("Please log in first!");
+                return;
+            }
+            document.getElementById('lostPetForm').style.display = 'block';
+        }
+
+        function submitLostPet(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('petName').value;
+            const lastSeen = document.getElementById('lastSeen').value;
+            const description = document.getElementById('description').value;
+            const contact = document.getElementById('contact').value;
+            const photoUrl = document.getElementById('photoUrl').value;
+
+            const postContainer = document.createElement('div');
+            postContainer.className = 'post-container';
+
+            const tack = document.createElement('div');
+            tack.className = 'thumbtack';
+            postContainer.appendChild(tack);
+
+            const post = document.createElement('div');
+            post.className = 'post';
+            post.innerHTML = `
+                <h2>${name}</h2>
+                <p><strong>Last Seen:</strong> ${lastSeen}</p>
+                <p><strong>Description:</strong> ${description}</p>
+                ${photoUrl ? `<img src="${photoUrl}" alt="Pet photo" style="width:100%;border-radius:6px;">` : ''}
+                <p><strong>Contact:</strong> ${contact}</p>
+            `;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'Remove Post';
+            removeBtn.onclick = () => {
+                if (currentUser === 'admin' || users[currentUser].includes(postContainer)) {
+                    postContainer.remove();
+                } else {
+                    alert("You don't have permission to remove this post.");
+                }
+            };
+
+            post.appendChild(removeBtn);
+            postContainer.appendChild(post);
+            document.querySelector('.board').insertBefore(postContainer, document.querySelector('.footer'));
+
+            users[currentUser].push(postContainer);
+            document.getElementById('lostPetForm').reset();
+            document.getElementById('lostPetForm').style.display = 'none';
+            alert("Lost pet reported and added to board!");
+        }
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Filter by Location</h2>
+        <button>W&L Campus</button>
+        <button>VMI Grounds</button>
+        <button>Downtown Lexington</button>
+        <button>East Lexington</button>
+        <button>South River</button>
+        <button>North Lee Highway</button>
+        <hr>
+        <button onclick="loginUser()">Login / Create Account</button>
+    </div>
+
+    <div class="board">
+        <h1>Lost Pets Bulletin Board</h1>
+        <button class="report-btn" onclick="showForm()">Report a Lost Pet</button>
+
+        
+        <button class="report-btn" onclick="window.location.href='form.html'">Report a Lost Pet</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPostsFromStorage();
+    });
+
+    function loadPostsFromStorage() {
+        const posts = JSON.parse(localStorage.getItem('lostPetPosts') || '[]');
+        const board = document.querySelector('.board');
+        const footer = document.querySelector('.footer');
+
+        posts.forEach(post => {
+            const postContainer = document.createElement('div');
+            postContainer.className = 'post-container';
+
+            const tack = document.createElement('div');
+            tack.className = 'thumbtack';
+            postContainer.appendChild(tack);
+
+            const postEl = document.createElement('div');
+            postEl.className = 'post';
+            postEl.innerHTML = `
+                <h2>${post.petName} (${post.petType})</h2>
+                <p><strong>Last Seen:</strong> ${post.lastSeen}</p>
+                <p><strong>Description:</strong> ${post.description}</p>
+                <p><strong>Location:</strong> ${post.location}</p>
+                ${post.photo ? `<img src="${post.photo}" alt="Pet photo" style="width:100%;border-radius:6px;margin-top:10px;">` : ''}
+                <p><strong>Contact:</strong> ${post.contact}</p>
+            `;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'Remove Post';
+            removeBtn.onclick = () => {
+                postContainer.remove();
+            };
+
+            postEl.appendChild(removeBtn);
+            postContainer.appendChild(postEl);
+            board.insertBefore(postContainer, footer);
+        });
+    }
+</script>
+
+
+        <div class="post-container">
+            <div class="thumbtack"></div>
+            <div class="post">
+                <h2>Lost Cat - Whiskers</h2>
+                <p><strong>Last Seen:</strong> July 21, near 5th and Maple Street</p>
+                <p><strong>Description:</strong> Grey tabby cat, green eyes, very friendly. Wearing a blue collar with a bell.</p>
+                <p><strong>Contact:</strong> Jane Doe - (555) 123-4567</p>
+            </div>
+        </div>
+
+        <div class="post-container">
+            <div class="thumbtack"></div>
+            <div class="post">
+                <h2>Missing Dog - Buster</h2>
+                <p><strong>Last Seen:</strong> July 20, near Elm Park</p>
+                <p><strong>Description:</strong> Brown lab mix, 3 years old, limps slightly on back leg. No collar.</p>
+                <p><strong>Contact:</strong> John Smith - (555) 987-6543</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2025 Lost Pets Bulletin Board. Please contact local shelters if you've found an animal.
+        </div>
+    </div>
+</body>
+</html>

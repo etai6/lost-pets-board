@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Report Lost Pet</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff8e1;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #5a370b;
+    }
+
+    form {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    .posted-info {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #fdf6e3;
+      padding: 20px;
+      border: 2px solid #deb887;
+      border-radius: 10px;
+    }
+
+    img.preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Report a Lost Pet</h1>
+  <form id="lostPetForm">
+    <label for="petType">Pet Type</label>
+    <select id="petType" name="petType" required onchange="toggleOtherType()">
+      <option value="">Select a type</option>
+      <option>Dog</option>
+      <option>Cat</option>
+      <option>Other</option>
+    </select>
+    <input type="text" id="otherType" name="otherType" placeholder="Specify other pet type" style="display:none;" />
+
+    <label for="petName">Pet Name</label>
+    <input type="text" id="petName" name="petName" required />
+
+    <label for="lastSeen">Last Seen</label>
+    <input type="text" id="lastSeen" name="lastSeen" required />
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description" rows="4" required></textarea>
+
+    <label for="location">Location</label>
+    <select id="location" name="location" required onchange="toggleOtherLocation()">
+      <option value="">Select a location</option>
+      <option>W&L Campus</option>
+      <option>VMI Grounds</option>
+      <option>Downtown Lexington</option>
+      <option>East Lexington</option>
+      <option>South River</option>
+      <option>North Lee Highway</option>
+      <option>Other</option>
+    </select>
+    <input type="text" id="otherLocation" name="otherLocation" placeholder="Specify other location" style="display:none;" />
+
+    <label for="contact">Your Contact Info</label>
+    <input type="text" id="contact" name="contact" required />
+
+    <label for="photo">Photo of Pet</label>
+    <input type="file" id="photo" name="photo" accept="image/*" />
+    <img id="photoPreview" class="preview" style="display:none;" />
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <div class="posted-info" id="postDisplay" style="display: none;"></div>
+
+  <script>
+    function toggleOtherType() {
+      const type = document.getElementById('petType').value;
+      document.getElementById('otherType').style.display = type === 'Other' ? 'block' : 'none';
+    }
+
+    function toggleOtherLocation() {
+      const loc = document.getElementById('location').value;
+      document.getElementById('otherLocation').style.display = loc === 'Other' ? 'block' : 'none';
+    }
+
+    document.getElementById('photo').addEventListener('change', function () {
+      const file = this.files[0];
+      const preview = document.getElementById('photoPreview');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.style.display = 'none';
+      }
+    });
+
+    document.getElementById('lostPetForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const petType = document.getElementById('petType').value === 'Other' ? document.getElementById('otherType').value : document.getElementById('petType').value;
+      const location = document.getElementById('location').value === 'Other' ? document.getElementById('otherLocation').value : document.getElementById('location').value;
+      const petName = document.getElementById('petName').value.trim();
+      const lastSeen = document.getElementById('lastSeen').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const contact = document.getElementById('contact').value.trim();
+      const photoFile = document.getElementById('photo').files[0];
+
+      if (!petType || !petName || !lastSeen || !description || !location || !contact) {
+        alert("Please fill out all required fields.");
+        return;
+      }
+
+      const post = {
+        id: Date.now(),
+        petType,
+        petName,
+        lastSeen,
+        description,
+        location,
+        contact,
+        photo: null
+      };
+
+      if (photoFile) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          post.photo = e.target.result;
+          savePost(post);
+        };
+        reader.readAsDataURL(photoFile);
+      } else {
+        savePost(post);
+      }
+    });
+
+    function savePost(post) {
+      const posts = JSON.parse(localStorage.getItem('lostPetPosts') || '[]');
+      posts.push(post);
+      localStorage.setItem('lostPetPosts', JSON.stringify(posts));
+
+      // Show confirmation
+      const postDisplay = document.getElementById('postDisplay');
+      postDisplay.innerHTML = `
+        <h2>Submission Successful!</h2>
+        <p><strong>Pet:</strong> ${post.petName} (${post.petType})</p>
+        <p><strong>Last Seen:</strong> ${post.lastSeen}</p>
+        <p><strong>Description:</strong> ${post.description}</p>
+        <p><strong>Location:</strong> ${post.location}</p>
+        <p><strong>Contact:</strong> ${post.contact}</p>
+        ${post.photo ? `<img class="preview" src="${post.photo}" />` : ''}
+        <p>Redirecting you to the main bulletin board...</p>
+      `;
+      postDisplay.style.display = 'block';
+
+      setTimeout(() => {
+        window.location.href = 'bulletin.html'; // Update this to the actual board file
+      }, 2500);
+
+      document.getElementById('lostPetForm').reset();
+      document.getElementById('photoPreview').style.display = 'none';
+      document.getElementById('otherType').style.display = 'none';
+      document.getElementById('otherLocation').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
